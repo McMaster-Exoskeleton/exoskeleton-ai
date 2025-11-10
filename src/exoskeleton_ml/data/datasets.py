@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import Tuple
 
 import torch
 from torch.utils.data import Dataset
@@ -33,7 +32,7 @@ class ExoskeletonDataset(Dataset):
         """Return the number of samples in the dataset."""
         ...
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         """Get a single sample.
 
         Args:

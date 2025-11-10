@@ -9,20 +9,20 @@ class BaselineModel(nn.Module):
 
     def __init__(
         self,
-        input_size: int,
-        hidden_size: int = 128,
-        num_classes: int = 5,
-        num_layers: int = 2,
-        dropout: float = 0.2,
+        _input_size: int,
+        _hidden_size: int = 128,
+        _num_classes: int = 5,
+        _num_layers: int = 2,
+        _dropout: float = 0.2,
     ) -> None:
         """Initialize baseline model.
 
         Args:
-            input_size: Number of input features.
-            hidden_size: Hidden layer size.
-            num_classes: Number of output classes.
-            num_layers: Number of LSTM layers.
-            dropout: Dropout rate.
+            _input_size: Number of input features.
+            _hidden_size: Hidden layer size.
+            _num_classes: Number of output classes.
+            _num_layers: Number of LSTM layers.
+            _dropout: Dropout rate.
         """
         super().__init__()
 

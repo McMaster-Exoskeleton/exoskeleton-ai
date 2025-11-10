@@ -1,8 +1,8 @@
 """Data preprocessing utilities."""
 
+
 import numpy as np
 import torch
-from typing import Tuple
 
 
 def preprocess_signals(
@@ -28,7 +28,7 @@ def create_sequences(
     labels: np.ndarray | torch.Tensor,
     sequence_length: int,
     step: int = 1,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     """Create overlapping sequences from continuous data.
 
     Args:
