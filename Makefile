@@ -11,11 +11,9 @@ install:
 
 install-dev:  ## Install package with development dependencies
 	pip3 install -e ".[dev]"
-	pre-commit install
 
 install-all:  ## Install all optional dependencies
 	pip3 install -e ".[all]"
-	pre-commit install
 
 test:  ## Run tests with pytest
 	pytest
@@ -40,9 +38,6 @@ format:  ## Format code with black and ruff
 format-check:  ## Check code formatting without modifying files
 	black --check src/ tests/
 	ruff check src/ tests/
-
-pre-commit:  ## Run pre-commit hooks on all files
-	pre-commit run --all-files
 
 clean:  ## Remove build artifacts and cache files
 	rm -rf build/

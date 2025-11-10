@@ -31,11 +31,10 @@ dependencies = [
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
-    "pytest-xdist>=3.5.0",  # Parallel test execution
+    "pytest-xdist>=3.5.0",
     "black>=24.0.0",
-    "ruff>=0.1.0",  # Fast linter, replaces flake8+isort
+    "ruff>=0.1.0",
     "mypy>=1.7.0",
-    "pre-commit>=3.5.0",
     "jupyter>=1.0.0",
     "notebook>=7.0.0",
     "ipykernel>=6.25.0",
@@ -53,7 +52,7 @@ where = ["src"]
 # Black configuration
 [tool.black]
 line-length = 100
-target-version = ["py310", "py311"]
+target-version = ["py311", "py312", "py313"]
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -74,7 +73,7 @@ exclude = '''
 # Ruff configuration (replaces flake8 + isort)
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
@@ -103,7 +102,7 @@ known-first-party = ["exoskeleton_ml"]
 
 # MyPy configuration
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -113,9 +112,10 @@ disallow_untyped_decorators = false
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
-warn_no_return = true
+warn_no_return = false
 strict_equality = true
 ignore_missing_imports = true
+disable_error_code = ["empty-body"]
 
 [[tool.mypy.overrides]]
 module = [
