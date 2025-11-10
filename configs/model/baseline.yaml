@@ -1,0 +1,8 @@
+# Baseline model configuration
+
+type: baseline
+input_size: 10
+hidden_size: 128
+num_classes: 5
+num_layers: 2
+dropout: 0.2

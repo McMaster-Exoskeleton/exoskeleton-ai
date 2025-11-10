@@ -1,0 +1,31 @@
+# Main configuration file for exoskeleton ML project
+
+# Data configuration
+data:
+  path: data/processed
+  batch_size: 32
+  num_workers: 4
+
+# Model configuration
+model:
+  type: baseline
+  input_size: 10
+  hidden_size: 128
+  num_classes: 5
+
+# Training configuration
+training:
+  num_epochs: 100
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  num_workers: 4
+  checkpoint_dir: models/checkpoints
+
+# Logging configuration
+logging:
+  level: INFO
+  file: null  # Set to path for file logging
+
+# Device configuration (auto-detected if not specified)
+# device: cuda  # Options: cuda, cpu, mps
