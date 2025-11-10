@@ -9,4 +9,4 @@ def compute_metrics(
     y_pred: np.ndarray | torch.Tensor,
     average: str = "macro",
 ) -> dict[str, float]:
-    pass
+    ...

@@ -15,7 +15,7 @@ def load_config(config_path: str | Path) -> DictConfig:
     Returns:
         Configuration as OmegaConf DictConfig object.
     """
-    pass
+    ...
 
 
 def save_config(config: DictConfig, save_path: str | Path) -> None:
@@ -25,7 +25,7 @@ def save_config(config: DictConfig, save_path: str | Path) -> None:
         config: Configuration to save.
         save_path: Path where to save the configuration.
     """
-    pass
+    ...
 
 
 def merge_configs(*configs: DictConfig) -> DictConfig:
@@ -37,7 +37,7 @@ def merge_configs(*configs: DictConfig) -> DictConfig:
     Returns:
         Merged configuration.
     """
-    pass
+    ...
 
 
 def config_to_dict(config: DictConfig) -> dict[str, Any]:
@@ -49,4 +49,4 @@ def config_to_dict(config: DictConfig) -> dict[str, Any]:
     Returns:
         Configuration as dictionary.
     """
-    pass
+    ...
