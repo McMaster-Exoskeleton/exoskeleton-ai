@@ -25,6 +25,56 @@ Number of subjects: 15 users <br>
 - 1-3 sessions per participant
 - \> 22 million labels of ground-truth moments across the left and right legs per lower-limb joint <br>
 
+### Phase 1 Subjects (BT01–BT12) — Unpowered Baseline
+
+These 12 subjects provide:
+- Pure human biomechanics (no exo influence)
+- Complete OpenSim joint angles, velocities, powers
+- Biological joint moments (after subtracting interaction torques)
+- Exoskeleton sensor data (hip/knee encoders, IMUs, insoles)
+- Exoskeleton unpowered for **all** tasks
+- Some tasks repeated with **heuristic control** enabled
+
+**Purpose:** Establish clean ground-truth behavior suitable for training biological joint moment estimators. This is what should matter for us.
+
+### Phase 2 Subjects (BT13–BT17) — Preliminary Model-In-The-Loop
+
+These 5 subjects walked with:
+- A **preliminary learned torque-estimation model** running in real time
+- Exoskeleton **powered for all tasks**
+- Interaction torques, desired torque, and measured torque available at 200 Hz
+
+Files include:
+- `torque_estimated`
+    Output of the real-time neural network estimator used during Phases 2 and 3.  
+    Represents the model’s prediction of the user’s biological joint moment.  
+    Time-aligned to correct for estimator delay. Not ground truth.
+- `torque_measured`
+    Motor driver–derived torque representing the actual torque produced by the actuator.  
+    Includes hardware dynamics (friction, inertia, gearing).
+
+- `interaction_torque`
+    Clean estimate of human–exo interaction torque:  
+    `interaction_torque = torque_measured − motor_dynamics_compensation`.  
+    This is the torque physically transmitted to the human and is used in computing biological joint moments.
+
+**Purpose:** Capture human–exo coupling and provide powered training data.
+
+### Phase 3 Subjects (BT01, BT02, BT13, BT18–BT24) — Validation Set
+
+This final validation set contains:
+- **10 total subjects**
+- 3 returning subjects (BT01, BT02, BT13)
+- 7 entirely new subjects (BT18–BT24)
+
+All trials in Phase 3:
+- Exoskeleton **powered**
+- Include the full task set (28 tasks × 66 conditions)
+- Serve as the **held-out test set** used in the publication
+
+**Purpose:** Evaluate generalization to unseen users and unseen sessions.
+
+
 ## Movement / Gestures
 ### Cyclic
 - level ground work
@@ -77,11 +127,48 @@ Number of subjects: 15 users <br>
 
 TCN Implementation: https://codeocean.com/capsule/5421243/tree/v2
 
-folder contains 2 .csv's:
-- **Exo.csv**: contains data from joint encoders moments
-- **Joint_Moments_Filt.csv**: contains data from IMU's
 
-^^ that's pretty much all they train their NN on, the rest of the data is used more for analysis
+#### **1. Exo.csv — Exoskeleton Sensor & Controller Data (Model Inputs)**  
+This file contains all real-time measurements recorded directly from the exoskeleton hardware at **200 Hz**.  
+It is the most feature-dense file and includes:
+
+- **Joint kinematics**  
+  - `hip_angle_{l,r}`, `hip_angle_{l,r}_velocity`, `hip_angle_{l,r}_velocity_filt`  
+  - `knee_angle_{l,r}`, `knee_angle_{l,r}_velocity`, `knee_angle_{l,r}_velocity_filt`  
+
+- **Actuator torque signals**  
+  - `*_torque_estimated` — real-time neural-network estimator output  
+  - `*_torque_desired` — controller-commanded torque  
+  - `*_torque_measured` — actuator torque after motor sensing  
+  - `*_torque_interaction` — human–exo interaction torque (measured minus modeled actuator dynamics)
+
+- **IMU measurements (thigh, shank, foot; bilateral)**  
+  - Accelerations: `{bodypart}_imu_{l,r}_accel_{x,y,z}`  
+  - Angular rates: `{bodypart}_imu_{l,r}_gyro_{x,y,z}`  
+  These IMUs are the primary sensing modality used for moment estimation.
+
+- **Insole force & center-of-pressure**  
+  - `insole_{l,r}_force_y`  
+  - `insole_{l,r}_cop_x`, `insole_{l,r}_cop_z`
+
+**Purpose:**  
+Represents the full observable state of the exoskeleton. These signals serve as **model inputs** for joint-moment prediction and movement classification.
+
+#### **2. Joint_Moments_Filt.csv — Ground-Truth Biological Joint Moments (Labels)**  
+This file contains **filtered inverse-dynamics estimates of biological joint moments**, derived from motion capture + force plate data and aligned to the exoskeleton’s 200 Hz timeline.
+
+Columns include:
+
+- `hip_flexion_{l,r}_moment`  
+- `hip_adduction_{l,r}_moment`  
+- `hip_rotation_{l,r}_moment`  
+- `knee_angle_{l,r}_moment`  
+- `ankle_angle_{l,r}_moment`  
+- `subtalar_angle_{l,r}_moment`
+
+**Purpose:**  
+Provides the **supervised learning targets** used for training the Temporal Convolutional Network described in the paper.
+
 
 ## Data Distribution Analysis
 ### Class balance
