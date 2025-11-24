@@ -7,19 +7,39 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-class ExoDataset(Dataset):
-    def __init__(self,
-                    data_path: str | Path,
-                    input_names: List[str],
-                    label_names: List[str],
-                    split: str = "train",
-                    device: torch.device = torch.device("cpu")):
+class ExoskeletonDataset(Dataset):
+    def __init__(
+            self,
+            data_path: str | Path,
+            input_names: List[str],
+            label_names: List[str],
+            split: str = "train",
+            device: torch.device = torch.device("cpu")
+    ) -> None:
         self.data_path = Path(data_path)
         self.input_names = input_names
         self.label_names = label_names
         self.device = device
     
-    def _load_all(self) -> list[tuple[torch.Tensor,torch.Tensor]]: # TODO: dependent on file structure
+    def __len__(self) -> int:
+        """Return the number of samples in the dataset."""
+        ...
+
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+        """
+        Get a single sample.
+
+        Args:
+            idx: Sample index.
+
+        Returns:
+            Tuple of (sample, label).
+        """
+        ...
+
+    def _load_all(
+        self
+    ) -> list[tuple[torch.Tensor,torch.Tensor]]: # TODO: dependent on file structure
         data = []
 
         INPUT_CSV = 'Exo.csv'
@@ -36,7 +56,11 @@ class ExoDataset(Dataset):
         
         return data
     
-    def _load_by_headers(self, file_path: str | Path, headers: List[str]) -> torch.Tensor: # size: [1, # of headers, # of timestamps in csv]
+    def _load_by_headers(
+        self, 
+        file_path: str | Path, 
+        headers: List[str]
+    ) -> torch.Tensor: # size: [1, # of headers, # of timestamps in csv]
         # load as DataFrame
         df = pd.read_csv(file_path)
 
@@ -58,5 +82,5 @@ if __name__ == "__main__":
 
     data_path = "..."
     
-    testds = ExoDataset(data_path,input_names,label_names)
+    testds = ExoskeletonDataset(data_path,input_names,label_names)
     testds._load_all()
