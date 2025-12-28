@@ -61,3 +61,20 @@ Overview
 - Not offline  
 - May not be allowed at competition
 
+### Local Python Server 
+
+**Overview**
+
+- Trained model is exported on development machine and copied on raspberry pi (Can be PyTorch or ONNX)  
+- Raspberry Pi runs local Python Inference server that loads the model  
+- Inference server exposes a local API for running predictions  
+- C++ systems gather sensors data   
+- Data is sent from C++ to the python server  
+- Python returns the result to the C++ systems  
+- [Deploying ML models as API using FastAPI](https://www.geeksforgeeks.org/machine-learning/deploying-ml-models-as-api-using-fastapi/?utm_source=chatgpt.com)
+
+**Benefits**
+
+- Operates offline  
+- Low Latency  
+- Very cost-effective
