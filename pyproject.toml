@@ -25,6 +25,8 @@ dependencies = [
     "omegaconf>=2.3.0",
     "wandb>=0.16.0",
     "tensorboard>=2.15.0",
+    "datasets>=2.14.0",
+    "huggingface-hub>=0.17.0",
 ]
 
 [project.optional-dependencies]

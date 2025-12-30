@@ -1,0 +1,167 @@
+# Phase1 Dataset Configuration
+# Configuration for exoskeleton Phase1 data loading and preprocessing
+
+# HuggingFace dataset configuration
+hf_repo: MacExo/exoData
+cache_dir: data/processed/phase1
+
+# Feature configuration
+num_imu_features: 24  # 4 IMUs × 6 (3 accel + 3 gyro)
+num_angle_features: 4  # 4 joint angles (left/right hip/knee)
+num_targets: 4  # 4 joint moments (left/right hip/knee)
+total_input_features: 28  # 24 IMU + 4 angles
+
+# Feature lists (for reference and validation)
+imu_features:
+  - thigh_imu_l_accel_x
+  - thigh_imu_l_accel_y
+  - thigh_imu_l_accel_z
+  - thigh_imu_l_gyro_x
+  - thigh_imu_l_gyro_y
+  - thigh_imu_l_gyro_z
+  - shank_imu_l_accel_x
+  - shank_imu_l_accel_y
+  - shank_imu_l_accel_z
+  - shank_imu_l_gyro_x
+  - shank_imu_l_gyro_y
+  - shank_imu_l_gyro_z
+  - thigh_imu_r_accel_x
+  - thigh_imu_r_accel_y
+  - thigh_imu_r_accel_z
+  - thigh_imu_r_gyro_x
+  - thigh_imu_r_gyro_y
+  - thigh_imu_r_gyro_z
+  - shank_imu_r_accel_x
+  - shank_imu_r_accel_y
+  - shank_imu_r_accel_z
+  - shank_imu_r_gyro_x
+  - shank_imu_r_gyro_y
+  - shank_imu_r_gyro_z
+
+angle_features:
+  - hip_flexion_l
+  - hip_flexion_r
+  - knee_angle_l
+  - knee_angle_r
+
+target_features:
+  - hip_flexion_l_moment
+  - hip_flexion_r_moment
+  - knee_angle_l_moment
+  - knee_angle_r_moment
+
+# Participant splits (Leave-One-Subject-Out strategy)
+splits:
+  train:
+    - BT01
+    - BT02
+    - BT03
+    - BT06
+    - BT07
+    - BT08
+    - BT09
+    - BT10
+    - BT11
+    - BT12
+    - BT13
+  val:
+    - BT14
+  test:
+    - BT15
+    - BT16
+    - BT17
+
+# All available participants with metadata
+participants:
+  BT01: { mass_kg: 80.59 }
+  BT02: { mass_kg: 72.24 }
+  BT03: { mass_kg: 95.29 }
+  BT06: { mass_kg: 79.33 }
+  BT07: { mass_kg: 64.49 }
+  BT08: { mass_kg: 69.13 }
+  BT09: { mass_kg: 82.31 }
+  BT10: { mass_kg: 93.45 }
+  BT11: { mass_kg: 50.39 }
+  BT12: { mass_kg: 78.15 }
+  BT13: { mass_kg: 89.85 }
+  BT14: { mass_kg: 67.30 }
+  BT15: { mass_kg: 58.40 }
+  BT16: { mass_kg: 64.33 }
+  BT17: { mass_kg: 60.03 }
+
+# DataLoader settings
+batch_size: 32
+num_workers: 4
+shuffle_train: true
+shuffle_val: false
+shuffle_test: false
+pin_memory: true
+drop_last_train: false  # Keep all samples
+drop_last_val: false
+drop_last_test: false
+
+# Preprocessing options
+preprocessing:
+  normalize: true  # Whether to normalize features
+  normalization_method: "standard"  # Options: "standard", "minmax", "robust"
+  normalization_stats_file: data/processed/phase1/normalization_stats.json
+
+  # Sequence padding/truncation
+  max_sequence_length: null  # null = variable length, or set max length
+  padding_value: 0.0
+
+  # Data validation
+  check_nan: true
+  check_inf: true
+  remove_invalid: true  # Remove trials with NaN/inf values
+
+# Download options
+download:
+  auto_download: true  # Auto-download from HF if not cached
+  force_redownload: false  # Force re-download even if cached
+  verify_integrity: true  # Verify dataset after download
+
+# Caching strategy
+caching:
+  cache_preprocessed: true  # Cache preprocessed tensors
+  cache_format: "pt"  # Options: "pt" (PyTorch), "hdf5", "zarr"
+  cache_compression: false  # Compress cached files
+  invalidate_on_config_change: true  # Re-process if config changes
+
+# Augmentation (future use)
+augmentation:
+  enabled: false
+  methods: []
+  # Future augmentation methods:
+  # - time_warping
+  # - noise_injection
+  # - mixup
+  # - cutout
+
+# Filtering options (optional trial filtering)
+filtering:
+  enabled: false
+  min_sequence_length: 100  # Minimum timesteps per trial
+  max_sequence_length: null  # Maximum timesteps per trial
+  exclude_trials: []  # List of trial names to exclude
+  include_only_trials: []  # If not empty, only include these trials
+  exclude_participants: []  # Exclude specific participants
+
+  # Task-based filtering
+  task_filter:
+    enabled: false
+    include_tasks: []  # e.g., ["normal_walk", "incline_walk"]
+    exclude_tasks: []
+
+# Logging and debugging
+logging:
+  verbose: true
+  log_dataset_stats: true  # Log statistics when loading
+  log_preprocessing: true  # Log preprocessing steps
+  warn_on_skip: true  # Warn when trials are skipped
+
+# Memory management
+memory:
+  prefetch_factor: 2  # Number of batches to prefetch
+  persistent_workers: true  # Keep workers alive between epochs
+  max_cache_size_gb: 20  # Maximum cache size in GB
