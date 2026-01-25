@@ -1,6 +1,5 @@
 """Evaluation metrics for regression tasks."""
 
-
 import torch
 
 
@@ -28,8 +27,8 @@ class RunningMetrics:
         self.sum_targets = 0.0
         self.sum_targets_squared = 0.0
         self.count = 0
-        self.target_min = float('inf')
-        self.target_max = float('-inf')
+        self.target_min = float("inf")
+        self.target_max = float("-inf")
 
         # Per-joint statistics
         self.joint_sse = [0.0] * self.num_joints
@@ -59,10 +58,10 @@ class RunningMetrics:
 
         # Update overall statistics
         errors = pred_valid - target_valid
-        self.sum_squared_error += (errors ** 2).sum().item()
+        self.sum_squared_error += (errors**2).sum().item()
         self.sum_absolute_error += errors.abs().sum().item()
         self.sum_targets += target_valid.sum().item()
-        self.sum_targets_squared += (target_valid ** 2).sum().item()
+        self.sum_targets_squared += (target_valid**2).sum().item()
         self.count += pred_valid.numel()
         self.target_min = min(self.target_min, target_valid.min().item())
         self.target_max = max(self.target_max, target_valid.max().item())
@@ -96,13 +95,13 @@ class RunningMetrics:
 
         # Overall metrics
         mse = self.sum_squared_error / self.count
-        rmse = mse ** 0.5
+        rmse = mse**0.5
         mae = self.sum_absolute_error / self.count
 
         # R² computation using Welford's online variance formula
         mean_target = self.sum_targets / self.count
         # Var = E[X²] - E[X]²
-        var_target = (self.sum_targets_squared / self.count) - (mean_target ** 2)
+        var_target = (self.sum_targets_squared / self.count) - (mean_target**2)
         ss_tot = var_target * self.count
         ss_res = self.sum_squared_error
         r2 = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
@@ -117,7 +116,7 @@ class RunningMetrics:
         for j, name in enumerate(joint_names):
             if self.joint_count[j] > 0:
                 joint_mse = self.joint_sse[j] / self.joint_count[j]
-                per_joint_rmse[f"rmse_{name}"] = joint_mse ** 0.5
+                per_joint_rmse[f"rmse_{name}"] = joint_mse**0.5
             else:
                 per_joint_rmse[f"rmse_{name}"] = 0.0
 

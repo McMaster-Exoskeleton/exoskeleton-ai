@@ -50,7 +50,9 @@ class EarlyStopping:
             self.counter += 1
             if self.counter >= self.patience:
                 self.should_stop = True
-                print(f"\n⚠️  Early stopping triggered after {self.counter} epochs without improvement")
+                print(
+                    f"\n⚠️  Early stopping triggered after {self.counter} epochs without improvement"
+                )
                 return True
 
         return False

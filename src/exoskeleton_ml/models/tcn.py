@@ -9,7 +9,6 @@ Original License: MIT License
 Copyright (c) 2018 CMU Locus Lab
 """
 
-
 import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
@@ -147,9 +146,7 @@ class TemporalBlock(nn.Module):
             )
 
         # Residual connection (1x1 conv if input/output channels differ)
-        self.downsample = (
-            nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
-        )
+        self.downsample = nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
 
         # Final activation after residual addition
         self.af = getattr(nn, activation)()
