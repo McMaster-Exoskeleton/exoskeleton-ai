@@ -1,7 +1,7 @@
 """Checkpointing utilities for saving and loading model states."""
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -14,8 +14,8 @@ def save_checkpoint(
     epoch: int,
     loss: float,
     filepath: Path | str,
-    scheduler: Optional[Any] = None,
-    metrics: Optional[Dict[str, float]] = None,
+    scheduler: Any | None = None,
+    metrics: dict[str, float] | None = None,
 ) -> None:
     """Save model checkpoint.
 
@@ -51,10 +51,10 @@ def save_checkpoint(
 def load_checkpoint(
     filepath: Path | str,
     model: nn.Module,
-    optimizer: Optional[optim.Optimizer] = None,
-    scheduler: Optional[Any] = None,
+    optimizer: optim.Optimizer | None = None,
+    scheduler: Any | None = None,
     device: str = "cpu",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Load model checkpoint.
 
     Args:
@@ -104,7 +104,7 @@ def save_best_model(
     epoch: int,
     loss: float,
     output_dir: Path | str,
-    metrics: Optional[Dict[str, float]] = None,
+    metrics: dict[str, float] | None = None,
 ) -> None:
     """Save the best model checkpoint.
 

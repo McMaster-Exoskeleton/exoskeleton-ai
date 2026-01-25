@@ -9,7 +9,6 @@ Original License: MIT License
 Copyright (c) 2018 CMU Locus Lab
 """
 
-from typing import List, Optional
 
 import torch
 import torch.nn as nn
@@ -189,7 +188,7 @@ class TemporalConvNet(nn.Module):
     def __init__(
         self,
         num_inputs: int,
-        num_channels: List[int],
+        num_channels: list[int],
         kernel_size: int = 2,
         dropout: float = 0.2,
         dropout_type: str = "Dropout",
@@ -256,15 +255,15 @@ class TCN(nn.Module):
         self,
         input_size: int,
         output_size: int,
-        num_channels: List[int],
+        num_channels: list[int],
         kernel_size: int,
         dropout: float,
         eff_hist: int,
         spatial_dropout: bool = False,
         activation: str = "ReLU",
         norm: str = "weight_norm",
-        center: Optional[torch.Tensor] = None,
-        scale: Optional[torch.Tensor] = None,
+        center: torch.Tensor | None = None,
+        scale: torch.Tensor | None = None,
     ):
         """Initialize TCN model.
 

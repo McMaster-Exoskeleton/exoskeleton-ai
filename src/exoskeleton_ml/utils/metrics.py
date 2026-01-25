@@ -1,6 +1,5 @@
 """Evaluation metrics for regression tasks."""
 
-from typing import Dict
 
 import torch
 
@@ -77,7 +76,7 @@ class RunningMetrics:
                 self.joint_sse[j] += ((pred_j - target_j) ** 2).sum().item()
                 self.joint_count[j] += pred_j.numel()
 
-    def compute(self) -> Dict[str, float]:
+    def compute(self) -> dict[str, float]:
         """Compute final metrics from accumulated statistics.
 
         Returns:
@@ -135,7 +134,7 @@ def compute_metrics(
     predictions: torch.Tensor,
     targets: torch.Tensor,
     mask: torch.Tensor,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Compute regression metrics for joint moment estimation.
 
     Args:
@@ -219,7 +218,7 @@ def compute_per_participant_metrics(
     targets: torch.Tensor,
     mask: torch.Tensor,
     participants: list,
-) -> Dict[str, Dict[str, float]]:
+) -> dict[str, dict[str, float]]:
     """Compute metrics separately for each participant.
 
     Args:
