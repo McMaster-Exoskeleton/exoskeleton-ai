@@ -1,0 +1,32 @@
+# TCN Large Model Configuration
+# More capacity, deeper network, larger receptive field
+
+name: tcn_large
+type: tcn
+
+# Architecture parameters
+architecture:
+  input_size: 28
+  output_size: 4
+
+  # Larger architecture
+  num_channels: [50, 50, 50, 50, 50, 50]  # 6 layers with 50 channels each
+  kernel_size: 9
+  dropout: 0.3  # Higher dropout for regularization
+  spatial_dropout: false
+  activation: ReLU
+  norm: weight_norm
+
+# Effective history = (9 - 1) * (2^6 - 1) + 1 = 8 * 63 + 1 = 505 timesteps
+effective_history: 505  # timesteps
+receptive_field_ms: 5050  # milliseconds at 100Hz (5 seconds!)
+
+normalization:
+  enabled: false
+  use_dataset_stats: true
+
+initialization:
+  conv_std: 0.01
+  linear_std: 0.01
+
+estimated_params: 150000

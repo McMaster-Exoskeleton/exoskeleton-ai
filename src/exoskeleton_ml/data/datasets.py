@@ -295,6 +295,11 @@ class ExoskeletonDataset(Dataset):
         # Load preprocessed trial
         trial_data: dict[str, Any] = torch.load(self.index[idx]["file"])
 
+        # Replace NaN values with 0 before normalization
+        # NaN values in IMU/angle data often indicate sensor failures or missing data
+        trial_data["inputs"] = torch.nan_to_num(trial_data["inputs"], nan=0.0)
+        trial_data["targets"] = torch.nan_to_num(trial_data["targets"], nan=0.0)
+
         # Apply normalization if enabled
         if self.normalize and self.normalization_stats is not None:
             inputs_mean = torch.tensor(self.normalization_stats["inputs"]["mean"])
@@ -407,6 +412,7 @@ def create_dataloaders(
     batch_size: int = 32,
     num_workers: int = 4,
     normalize: bool = True,
+    device: str | None = None,
     **kwargs: Any,
 ) -> tuple[Any, Any, Any]:
     """
@@ -421,6 +427,7 @@ def create_dataloaders(
         batch_size: Batch size for DataLoader
         num_workers: Number of worker processes
         normalize: Whether to normalize features
+        device: Device type ('cuda', 'mps', 'cpu', or None for auto)
         **kwargs: Additional arguments for DataLoader
 
     Returns:
@@ -434,7 +441,17 @@ def create_dataloaders(
         ...     batch_size=16
         ... )
     """
+    import torch
     from torch.utils.data import DataLoader
+
+    # Only use pin_memory on CUDA (not beneficial for MPS or CPU)
+    if device is None:
+        device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else ("mps" if torch.backends.mps.is_available() else "cpu")
+        )
+    use_pin_memory = device == "cuda"
 
     # Create datasets
     train_dataset = ExoskeletonDataset(
@@ -478,7 +495,8 @@ def create_dataloaders(
         shuffle=True,
         num_workers=num_workers,
         collate_fn=train_dataset.collate_fn,
-        pin_memory=True,
+        pin_memory=use_pin_memory,
+        persistent_workers=num_workers > 0,
         **kwargs,
     )
 
@@ -489,7 +507,8 @@ def create_dataloaders(
             shuffle=False,
             num_workers=num_workers,
             collate_fn=val_dataset.collate_fn,
-            pin_memory=True,
+            pin_memory=use_pin_memory,
+            persistent_workers=num_workers > 0,
             **kwargs,
         )
         if val_dataset
@@ -503,7 +522,8 @@ def create_dataloaders(
             shuffle=False,
             num_workers=num_workers,
             collate_fn=test_dataset.collate_fn,
-            pin_memory=True,
+            pin_memory=use_pin_memory,
+            persistent_workers=num_workers > 0,
             **kwargs,
         )
         if test_dataset

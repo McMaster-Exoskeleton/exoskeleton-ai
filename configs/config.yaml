@@ -1,17 +1,9 @@
 # Main configuration file for exoskeleton ML project
 
-# Data configuration
-data:
-  path: data/processed
-  batch_size: 32
-  num_workers: 4
-
-# Model configuration
-model:
-  type: baseline
-  input_size: 10
-  hidden_size: 128
-  num_classes: 5
+defaults:
+  - data: phase1
+  - model: tcn
+  - _self_
 
 # Training configuration
 training:
@@ -19,13 +11,42 @@ training:
   batch_size: 32
   learning_rate: 0.001
   weight_decay: 0.0001
-  num_workers: 4
-  checkpoint_dir: models/checkpoints
+
+  # Optimizer
+  optimizer: adam
+
+  # Scheduler
+  scheduler:
+    type: reduce_on_plateau
+    factor: 0.5
+    patience: 10
+    min_lr: 1.0e-6
+
+  # Regularization
+  gradient_clip_norm: 1.0
+  early_stopping_patience: 20
+
+  # Checkpointing
+  save_frequency: 10  # Save checkpoint every N epochs
+
+  # Output
+  output_dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 # Logging configuration
 logging:
   level: INFO
   file: null  # Set to path for file logging
+  verbose: true
 
 # Device configuration (auto-detected if not specified)
-# device: cuda  # Options: cuda, cpu, mps
+device: null  # Options: cuda, cpu, mps, or null for auto-detect
+
+# Random seed for reproducibility
+seed: 42
+
+# Hydra configuration
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: outputs/multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}

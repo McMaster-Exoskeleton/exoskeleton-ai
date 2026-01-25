@@ -166,3 +166,5 @@ docs/_templates/
 # Allow src data and models
 !src/exoskeleton_ml/data/
 !src/exoskeleton_ml/models/
+
+temp/*

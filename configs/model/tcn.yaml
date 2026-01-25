@@ -1,0 +1,39 @@
+# TCN Model Configuration
+# Based on "Task-Agnostic Exoskeleton Control via Biological Joint Moment Estimation"
+
+name: tcn
+type: tcn
+
+# Architecture parameters
+architecture:
+  input_size: 28  # 24 IMU features + 4 joint angles
+  output_size: 4  # 4 joint moments (hip/knee left/right)
+
+  # TCN-specific parameters
+  num_channels: [25, 25, 25, 25, 25]  # 5 layers with 25 channels each
+  kernel_size: 7  # Kernel size for convolutions
+  dropout: 0.2  # Dropout probability
+  spatial_dropout: false  # Use standard dropout (not spatial/2D)
+  activation: ReLU  # Activation function
+  norm: weight_norm  # Normalization type (weight_norm, BatchNorm1d, LayerNorm)
+
+# Computed properties (for reference)
+# Effective history = (kernel_size - 1) * (2^num_levels - 1) + 1
+# For kernel_size=7, num_levels=5:
+#   eff_hist = (7 - 1) * (2^5 - 1) + 1 = 6 * 31 + 1 = 187 timesteps
+# At 100Hz sampling rate, this is 1.87 seconds of history
+effective_history: 187  # timesteps
+receptive_field_ms: 1870  # milliseconds at 100Hz
+
+# Normalization (handled by dataset, model normalization disabled)
+normalization:
+  enabled: false  # Dataset already normalizes, model just passes through
+  use_dataset_stats: true  # Use normalization stats from dataset
+
+# Weight initialization
+initialization:
+  conv_std: 0.01  # Standard deviation for conv layer initialization
+  linear_std: 0.01  # Standard deviation for linear layer initialization
+
+# Model size estimation (approximate)
+estimated_params: 47000  # Rough estimate of trainable parameters
