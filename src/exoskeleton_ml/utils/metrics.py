@@ -20,7 +20,7 @@ class RunningMetrics:
         self.num_joints = num_joints
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset all accumulated statistics."""
         # Overall statistics
         self.sum_squared_error = 0.0
@@ -36,7 +36,7 @@ class RunningMetrics:
         self.joint_count = [0] * self.num_joints
 
     @torch.no_grad()
-    def update(self, predictions: torch.Tensor, targets: torch.Tensor, mask: torch.Tensor):
+    def update(self, predictions: torch.Tensor, targets: torch.Tensor, mask: torch.Tensor) -> None:
         """Update running statistics with a new batch.
 
         Args:

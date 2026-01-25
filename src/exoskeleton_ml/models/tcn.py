@@ -173,9 +173,10 @@ class TemporalBlock(nn.Module):
         Returns:
             Output tensor of shape (batch, channels, seq_len).
         """
-        out = self.net(x)
+        out: torch.Tensor = self.net(x)
         res = x if self.downsample is None else self.downsample(x)
-        return self.af(out + res)
+        result: torch.Tensor = self.af(out + res)
+        return result
 
 
 class TemporalConvNet(nn.Module):
@@ -241,7 +242,8 @@ class TemporalConvNet(nn.Module):
         Returns:
             Output tensor of shape (batch, channels, seq_len).
         """
-        return self.network(x)
+        result: torch.Tensor = self.network(x)
+        return result
 
 
 class TCN(nn.Module):
@@ -302,12 +304,12 @@ class TCN(nn.Module):
         self.eff_hist = eff_hist
 
         # Normalization parameters (optional, prefer dataset normalization)
-        self.register_buffer(
-            "center", center if center is not None else torch.zeros(input_size)
-        )
-        self.register_buffer(
-            "scale", scale if scale is not None else torch.ones(input_size)
-        )
+        center_tensor = center if center is not None else torch.zeros(input_size)
+        scale_tensor = scale if scale is not None else torch.ones(input_size)
+        self.register_buffer("center", center_tensor)
+        self.register_buffer("scale", scale_tensor)
+        self.center: torch.Tensor
+        self.scale: torch.Tensor
 
     def init_weights(self) -> None:
         """Initialize linear layer weights."""
@@ -329,11 +331,10 @@ class TCN(nn.Module):
         x = x.transpose(1, 2)
 
         # Optional normalization (prefer dataset normalization instead)
-        if self.center is not None and self.scale is not None:
-            # Expand dimensions for broadcasting: (1, features, 1)
-            center = self.center.view(1, -1, 1)
-            scale = self.scale.view(1, -1, 1)
-            x = (x - center) / scale
+        # Expand dimensions for broadcasting: (1, features, 1)
+        center_view = self.center.view(1, -1, 1)
+        scale_view = self.scale.view(1, -1, 1)
+        x = (x - center_view) / scale_view
 
         # Forward pass through TCN
         out = self.tcn(x)  # (batch, num_channels[-1], seq_len)
@@ -342,9 +343,9 @@ class TCN(nn.Module):
         out = out.transpose(1, 2)
 
         # Apply linear layer to get final predictions
-        out = self.linear(out)  # (batch, seq_len, output_size)
+        result: torch.Tensor = self.linear(out)  # (batch, seq_len, output_size)
 
-        return out
+        return result
 
     def get_effective_history(self) -> int:
         """Get the effective history (receptive field) of the network.
