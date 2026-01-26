@@ -50,26 +50,6 @@ target_features:
   - knee_angle_l_moment
   - knee_angle_r_moment
 
-# Participant splits (Leave-One-Subject-Out strategy)
-splits:
-  train:
-    - BT01
-    - BT02
-    - BT03
-    - BT06
-    - BT07
-    - BT08
-    - BT09
-    - BT10
-    - BT11
-    - BT12
-    - BT13
-  val:
-    - BT14
-  test:
-    - BT15
-    - BT16
-    - BT17
 
 # All available participants with metadata
 participants:
@@ -89,16 +69,6 @@ participants:
   BT16: { mass_kg: 64.33 }
   BT17: { mass_kg: 60.03 }
 
-# DataLoader settings
-batch_size: 32
-num_workers: 4
-shuffle_train: true
-shuffle_val: false
-shuffle_test: false
-pin_memory: true
-drop_last_train: false  # Keep all samples
-drop_last_val: false
-drop_last_test: false
 
 # Preprocessing options
 preprocessing:
