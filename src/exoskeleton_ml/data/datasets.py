@@ -104,7 +104,10 @@ class ExoskeletonDataset(Dataset):
         # Filter by participants if specified
         if participants is not None:
             print(f"🔍 Filtering dataset for participants: {participants}")
-            self.hf_dataset = self.hf_dataset.filter(lambda x: x["participant"] in participants)
+            self.hf_dataset = self.hf_dataset.filter(
+                lambda p: p in participants,
+                input_columns=["participant"]
+            )
             print(f"   Filtered to {len(self.hf_dataset)} trials")
 
         # Check cache and process if needed
