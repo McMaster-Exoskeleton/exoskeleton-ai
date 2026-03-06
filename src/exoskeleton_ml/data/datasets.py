@@ -446,7 +446,11 @@ def create_dataloaders(
 
     # Only use pin_memory on CUDA (not beneficial for MPS or CPU)
     if device is None:
-        device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
+        device = (
+            "cuda"
+            if torch.cuda.is_available()
+            else ("mps" if torch.backends.mps.is_available() else "cpu")
+        )
     use_pin_memory = device == "cuda"
 
     # Create datasets
