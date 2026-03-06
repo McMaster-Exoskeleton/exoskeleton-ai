@@ -10,7 +10,7 @@ Usage:
     uvicorn scripts.server:app --host 127.0.0.1 --port 8000  # localhost only
 
 Dependencies (not in pyproject.toml, install on Pi):
-    pip install fastapi uvicorn[standard] onnxruntime numpy
+    pip install fastapi uvicorn[standard] onnxruntime numpy msgpack
 
 Input shape:  (1, WINDOW_SIZE, 28)  — WINDOW_SIZE defaults to 187 for standard TCN
 Output shape: (1, WINDOW_SIZE, 4)   — server returns only the final timestep's 4 values
@@ -20,9 +20,12 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Annotated
 
+import time
+
+import msgpack
 import numpy as np
 import onnxruntime as ort
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel, Field, model_validator
 
 # ---------------------------------------------------------------------------
@@ -104,11 +107,21 @@ class PredictResponse(BaseModel):
     hip_right: float
     knee_left: float
     knee_right: float
+    inference_ms: float  # ONNX session.run() time only, excludes HTTP/JSON overhead
 
 
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
+
+
+def _run_inference(window_bytes: np.ndarray) -> tuple[np.ndarray, float]:
+    """Shared inference logic. Input must already be shaped (1, WINDOW_SIZE, FEATURE_COUNT)."""
+    t0 = time.perf_counter()
+    outputs = _session.run(None, {_input_name: window_bytes})  # type: ignore[index]
+    inference_ms = (time.perf_counter() - t0) * 1000
+    preds = outputs[0][0, -1, :]
+    return preds, inference_ms
 
 
 @app.get("/health")
@@ -124,17 +137,39 @@ def predict(req: PredictRequest) -> PredictResponse:
     if _session is None or _input_name is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
 
-    # Shape: (1, WINDOW_SIZE, FEATURE_COUNT)
     input_array = np.array(req.window, dtype=np.float32)[np.newaxis, ...]
-
-    outputs = _session.run(None, {_input_name: input_array})
-    # outputs[0] shape: (1, WINDOW_SIZE, OUTPUT_COUNT)
-    # Take the final timestep's predictions
-    preds = outputs[0][0, -1, :]
+    preds, inference_ms = _run_inference(input_array)
 
     return PredictResponse(
         hip_left=float(preds[0]),
         hip_right=float(preds[1]),
         knee_left=float(preds[2]),
         knee_right=float(preds[3]),
+        inference_ms=round(inference_ms, 3),
     )
+
+
+@app.post("/predict_msgpack")
+async def predict_msgpack(request: Request) -> Response:
+    """
+    Msgpack endpoint for lower-overhead inference.
+
+    Request body:  msgpack-encoded flat list of 187*28=5236 float32 values (row-major)
+    Response body: msgpack-encoded dict {hip_left, hip_right, knee_left, knee_right, inference_ms}
+    """
+    if _session is None or _input_name is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+
+    raw = await request.body()
+    flat = msgpack.unpackb(raw, raw=False)
+    input_array = np.array(flat, dtype=np.float32).reshape(1, WINDOW_SIZE, FEATURE_COUNT)
+    preds, inference_ms = _run_inference(input_array)
+
+    result = {
+        "hip_left": float(preds[0]),
+        "hip_right": float(preds[1]),
+        "knee_left": float(preds[2]),
+        "knee_right": float(preds[3]),
+        "inference_ms": round(inference_ms, 3),
+    }
+    return Response(content=msgpack.packb(result), media_type="application/x-msgpack")
