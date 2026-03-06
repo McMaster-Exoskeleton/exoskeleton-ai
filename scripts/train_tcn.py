@@ -17,7 +17,7 @@ Usage:
 
 from exoskeleton_ml.utils import (
     EarlyStopping,
-    compute_metrics,
+    RunningMetrics,
     get_device,
     save_best_model,
     save_checkpoint,
@@ -163,9 +163,9 @@ def validate(
     """
     model.eval()
     total_loss = 0.0
-    all_outputs = []
-    all_targets = []
-    all_masks = []
+
+    # Use running metrics to avoid memory accumulation
+    running_metrics = RunningMetrics(num_joints=4)
 
     progress_bar = tqdm(loader, desc=f"Epoch {epoch} [Val]", leave=False)
 
@@ -181,32 +181,16 @@ def validate(
         loss = masked_loss(outputs, targets, mask, criterion)
         total_loss += loss.item()
 
-        # Store for metrics computation - flatten valid positions only
-        # This avoids issues with different sequence lengths across batches
-        for i in range(outputs.shape[0]):  # Iterate over batch
-            seq_len = mask[i].sum().item()  # Get actual length for this sequence
-            all_outputs.append(outputs[i, :seq_len].cpu())  # Only valid timesteps
-            all_targets.append(targets[i, :seq_len].cpu())
-            all_masks.append(mask[i, :seq_len].cpu())
+        # Update running metrics (no tensor accumulation)
+        running_metrics.update(outputs, targets, mask)
 
         progress_bar.set_postfix({"loss": f"{loss.item():.4f}"})
 
     # Compute average loss
     avg_loss = total_loss / len(loader)
 
-    # Concatenate all sequences (now all are 1D after flattening)
-    all_outputs = torch.cat(all_outputs, dim=0)  # (total_valid_timesteps, 4)
-    all_targets = torch.cat(all_targets, dim=0)  # (total_valid_timesteps, 4)
-    all_masks = torch.cat(all_masks, dim=0)  # (total_valid_timesteps,)
-
-    # Reshape for metrics computation - add batch and sequence dimensions back
-    # but now all sequences are concatenated into one long sequence
-    all_outputs = all_outputs.unsqueeze(0)  # (1, total_timesteps, 4)
-    all_targets = all_targets.unsqueeze(0)  # (1, total_timesteps, 4)
-    all_masks = all_masks.unsqueeze(0)  # (1, total_timesteps)
-
-    # Compute metrics
-    metrics = compute_metrics(all_outputs, all_targets, all_masks)
+    # Compute final metrics from accumulated statistics
+    metrics = running_metrics.compute()
 
     return avg_loss, metrics
 

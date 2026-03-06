@@ -9,8 +9,6 @@ Original License: MIT License
 Copyright (c) 2018 CMU Locus Lab
 """
 
-from typing import List, Optional
-
 import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
@@ -148,9 +146,7 @@ class TemporalBlock(nn.Module):
             )
 
         # Residual connection (1x1 conv if input/output channels differ)
-        self.downsample = (
-            nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
-        )
+        self.downsample = nn.Conv1d(n_inputs, n_outputs, 1) if n_inputs != n_outputs else None
 
         # Final activation after residual addition
         self.af = getattr(nn, activation)()
@@ -174,9 +170,10 @@ class TemporalBlock(nn.Module):
         Returns:
             Output tensor of shape (batch, channels, seq_len).
         """
-        out = self.net(x)
+        out: torch.Tensor = self.net(x)
         res = x if self.downsample is None else self.downsample(x)
-        return self.af(out + res)
+        result: torch.Tensor = self.af(out + res)
+        return result
 
 
 class TemporalConvNet(nn.Module):
@@ -189,7 +186,7 @@ class TemporalConvNet(nn.Module):
     def __init__(
         self,
         num_inputs: int,
-        num_channels: List[int],
+        num_channels: list[int],
         kernel_size: int = 2,
         dropout: float = 0.2,
         dropout_type: str = "Dropout",
@@ -242,7 +239,8 @@ class TemporalConvNet(nn.Module):
         Returns:
             Output tensor of shape (batch, channels, seq_len).
         """
-        return self.network(x)
+        result: torch.Tensor = self.network(x)
+        return result
 
 
 class TCN(nn.Module):
@@ -256,15 +254,15 @@ class TCN(nn.Module):
         self,
         input_size: int,
         output_size: int,
-        num_channels: List[int],
+        num_channels: list[int],
         kernel_size: int,
         dropout: float,
         eff_hist: int,
         spatial_dropout: bool = False,
         activation: str = "ReLU",
         norm: str = "weight_norm",
-        center: Optional[torch.Tensor] = None,
-        scale: Optional[torch.Tensor] = None,
+        center: torch.Tensor | None = None,
+        scale: torch.Tensor | None = None,
     ):
         """Initialize TCN model.
 
@@ -303,12 +301,12 @@ class TCN(nn.Module):
         self.eff_hist = eff_hist
 
         # Normalization parameters (optional, prefer dataset normalization)
-        self.register_buffer(
-            "center", center if center is not None else torch.zeros(input_size)
-        )
-        self.register_buffer(
-            "scale", scale if scale is not None else torch.ones(input_size)
-        )
+        center_tensor = center if center is not None else torch.zeros(input_size)
+        scale_tensor = scale if scale is not None else torch.ones(input_size)
+        self.register_buffer("center", center_tensor)
+        self.register_buffer("scale", scale_tensor)
+        self.center: torch.Tensor
+        self.scale: torch.Tensor
 
     def init_weights(self) -> None:
         """Initialize linear layer weights."""
@@ -330,11 +328,10 @@ class TCN(nn.Module):
         x = x.transpose(1, 2)
 
         # Optional normalization (prefer dataset normalization instead)
-        if self.center is not None and self.scale is not None:
-            # Expand dimensions for broadcasting: (1, features, 1)
-            center = self.center.view(1, -1, 1)
-            scale = self.scale.view(1, -1, 1)
-            x = (x - center) / scale
+        # Expand dimensions for broadcasting: (1, features, 1)
+        center_view = self.center.view(1, -1, 1)
+        scale_view = self.scale.view(1, -1, 1)
+        x = (x - center_view) / scale_view
 
         # Forward pass through TCN
         out = self.tcn(x)  # (batch, num_channels[-1], seq_len)
@@ -343,9 +340,9 @@ class TCN(nn.Module):
         out = out.transpose(1, 2)
 
         # Apply linear layer to get final predictions
-        out = self.linear(out)  # (batch, seq_len, output_size)
+        result: torch.Tensor = self.linear(out)  # (batch, seq_len, output_size)
 
-        return out
+        return result
 
     def get_effective_history(self) -> int:
         """Get the effective history (receptive field) of the network.

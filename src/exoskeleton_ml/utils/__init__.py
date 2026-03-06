@@ -5,7 +5,7 @@ from .config import load_config
 from .device import get_device
 from .early_stopping import EarlyStopping
 from .logging import setup_logging
-from .metrics import compute_metrics, compute_per_participant_metrics
+from .metrics import RunningMetrics, compute_metrics, compute_per_participant_metrics
 
 __all__ = [
     "load_config",
@@ -17,4 +17,5 @@ __all__ = [
     "EarlyStopping",
     "compute_metrics",
     "compute_per_participant_metrics",
+    "RunningMetrics",
 ]
