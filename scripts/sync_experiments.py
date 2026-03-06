@@ -17,17 +17,32 @@ def get_service_client(service_account_file):
     return build('sheets', 'v4', credentials=creds)
 
 
-def update_sheet(service_account_file, data):
-    service = get_service_client(service_account_file)
+def sheet_get_keys(service):
+
+    # get keys in first column ("A")
+    result = service.spreadsheets().values().get(
+        spreadsheetId=SPREADSHEET_ID,
+        range="Sheet1!A:A"
+    ).execute()
+
+    values = result.get('values', [])
+
+    if not values:
+        return []
+
+    return [row[0] for row in values if row]
+
+
+def sheet_append_experiments(service, data):
 
     body = {'values': data}
 
-    # Write data to Sheet1 starting at A1
+    # Append data to Sheet1 starting at A1
     service.spreadsheets().values().append(
         spreadsheetId=SPREADSHEET_ID,
-        range="Sheet1!A1",           # The starting point to find your table
+        range="Sheet1!A1",
         valueInputOption="RAW",
-        insertDataOption="INSERT_ROWS",  # This ensures it creates new rows at the end
+        insertDataOption="INSERT_ROWS",
         body=body
     ).execute()
     print("Update successful!")
@@ -91,5 +106,8 @@ if __name__ == "__main__":
     NAME = args.name
     EXPERIMENT_PATH = args.experiment_path
 
-    update_sheet(SERVICE_ACCOUNT_FILE,
-                 get_experiments_rows(EXPERIMENT_PATH, NAME))
+    service = get_service_client(SERVICE_ACCOUNT_FILE)
+    existing_keys = set(sheet_get_keys(service))
+    rows = [row for row in get_experiments_rows(
+        EXPERIMENT_PATH, NAME) if row[0] not in existing_keys]
+    sheet_append_experiments(service, rows)
