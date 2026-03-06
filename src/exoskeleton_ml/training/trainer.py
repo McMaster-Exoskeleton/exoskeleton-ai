@@ -65,7 +65,7 @@ class Trainer:
             outputs = self.model(inputs)  # (batch, seq_len, 4)
 
             # Compute masked loss
-            loss = self.masked_loss(outputs, targets, mask, self.criterion)
+            loss = self.masked_loss(outputs, targets, mask)
 
             # Backward pass
             loss.backward()
@@ -117,7 +117,7 @@ class Trainer:
             outputs = self.model(inputs)
 
             # Compute loss
-            loss = Trainer.masked_loss(outputs, targets, mask, self.criterion)
+            loss = Trainer.masked_loss(outputs, targets, mask)
             total_loss += loss.item()
 
             # Update running metrics (no tensor accumulation)
