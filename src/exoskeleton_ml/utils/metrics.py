@@ -133,23 +133,29 @@ def compute_metrics(
     predictions: torch.Tensor,
     targets: torch.Tensor,
     mask: torch.Tensor,
+    joint_names: list[str] | None = None,
 ) -> dict[str, float]:
     """Compute regression metrics for joint moment estimation.
 
     Args:
-        predictions: Model predictions of shape (batch, seq_len, 4).
-        targets: Ground truth targets of shape (batch, seq_len, 4).
+        predictions: Model predictions of shape (batch, seq_len, num_joints).
+        targets: Ground truth targets of shape (batch, seq_len, num_joints).
         mask: Boolean mask of shape (batch, seq_len) indicating valid positions.
+        joint_names: Names for each output joint. Defaults to
+            ["hip_l", "hip_r", "knee_l", "knee_r"] for the 4-joint model.
 
     Returns:
         Dictionary containing:
             - rmse_overall: Overall RMSE across all joints
-            - rmse_hip_l, rmse_hip_r, rmse_knee_l, rmse_knee_r: Per-joint RMSE
+            - rmse_<joint>: Per-joint RMSE for each joint name
             - mae_overall: Overall Mean Absolute Error
             - r2_overall: Overall R² score
             - nrmse_overall: Normalized RMSE (by target range)
     """
-    # Expand mask to match predictions shape: (batch, seq_len, 1)
+    if joint_names is None:
+        joint_names = ["hip_l", "hip_r", "knee_l", "knee_r"]
+
+    # Expand mask to match predictions shape: (batch, seq_len, num_joints)
     mask = mask.unsqueeze(-1)
 
     # Create combined mask: valid positions AND non-NaN values
@@ -164,10 +170,7 @@ def compute_metrics(
     if num_valid == 0:
         return {
             "rmse_overall": 0.0,
-            "rmse_hip_l": 0.0,
-            "rmse_hip_r": 0.0,
-            "rmse_knee_l": 0.0,
-            "rmse_knee_r": 0.0,
+            **{f"rmse_{j}": 0.0 for j in joint_names},
             "mae_overall": 0.0,
             "r2_overall": 0.0,
             "nrmse_overall": 0.0,
@@ -178,7 +181,6 @@ def compute_metrics(
     rmse = torch.sqrt(mse).item()
 
     # Per-joint RMSE
-    joint_names = ["hip_l", "hip_r", "knee_l", "knee_r"]
     per_joint_rmse = {}
     for i, joint in enumerate(joint_names):
         # Get valid mask for this specific joint

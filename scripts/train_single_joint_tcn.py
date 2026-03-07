@@ -175,7 +175,7 @@ def validate(
     all_targets = []
     all_masks = []
 
-     # obtain indicies from yaml configuration file
+    # obtain indices from yaml configuration file
     feature_idx = cfg.model.data_mapping.joint_features
     joint_idx = cfg.model.data_mapping.joint_index
 
@@ -218,8 +218,13 @@ def validate(
     all_targets = all_targets.unsqueeze(0)  # (1, total_timesteps, 1)
     all_masks = all_masks.unsqueeze(0)  # (1, total_timesteps)
 
-    # Compute metrics
-    metrics = compute_metrics(all_outputs, all_targets, all_masks)
+    # Derive joint name from config for per-joint metrics key
+    _joint_label_map = ["hip_l", "hip_r", "knee_l", "knee_r"]
+    joint_name = _joint_label_map[cfg.model.data_mapping.joint_index]
+
+    # Compute metrics using the single joint name so the returned dict has
+    # the correct key (e.g. "rmse_hip_l") instead of four 4-joint keys.
+    metrics = compute_metrics(all_outputs, all_targets, all_masks, joint_names=[joint_name])
 
     return avg_loss, metrics
 
@@ -317,6 +322,10 @@ def train(cfg: DictConfig) -> None:
     print("Training")
     print("=" * 80)
 
+    # Derive joint label for display (mirrors logic in validate())
+    _joint_label_map = ["hip_l", "hip_r", "knee_l", "knee_r"]
+    joint_label = _joint_label_map[cfg.model.data_mapping.joint_index]
+
     best_val_loss = float("inf")
     train_losses = []
     val_losses = []
@@ -341,12 +350,7 @@ def train(cfg: DictConfig) -> None:
         print(f"Val RMSE:   {val_metrics['rmse_overall']:.4f} Nm/kg")
         print(f"Val R²:     {val_metrics['r2_overall']:.4f}")
         print(f"Val MAE:    {val_metrics['mae_overall']:.4f} Nm/kg")
-
-        # Per-joint metrics
-        print(f"  Hip L:  {val_metrics['rmse_hip_l']:.4f} Nm/kg")
-        print(f"  Hip R:  {val_metrics['rmse_hip_r']:.4f} Nm/kg")
-        print(f"  Knee L: {val_metrics['rmse_knee_l']:.4f} Nm/kg")
-        print(f"  Knee R: {val_metrics['rmse_knee_r']:.4f} Nm/kg")
+        print(f"  {joint_label}: {val_metrics[f'rmse_{joint_label}']:.4f} Nm/kg")
 
         # Learning rate
         current_lr = optimizer.param_groups[0]["lr"]
@@ -408,11 +412,7 @@ def train(cfg: DictConfig) -> None:
     print(f"Test RMSE: {test_metrics['rmse_overall']:.4f} Nm/kg")
     print(f"Test R²:   {test_metrics['r2_overall']:.4f}")
     print(f"Test MAE:  {test_metrics['mae_overall']:.4f} Nm/kg")
-    print("\nPer-joint Test RMSE:")
-    print(f"  Hip L:  {test_metrics['rmse_hip_l']:.4f} Nm/kg")
-    print(f"  Hip R:  {test_metrics['rmse_hip_r']:.4f} Nm/kg")
-    print(f"  Knee L: {test_metrics['rmse_knee_l']:.4f} Nm/kg")
-    print(f"  Knee R: {test_metrics['rmse_knee_r']:.4f} Nm/kg")
+    print(f"  {joint_label}: {test_metrics[f'rmse_{joint_label}']:.4f} Nm/kg")
 
     # Save final results
     results = {
