@@ -54,6 +54,7 @@ MODEL_REGISTRY: dict[str, dict] = {
         "window_size": 187,
         "feature_count": 7,
         "joint_indices": [0],  # hip_left only
+        "feature_indices": [0, 1, 2, 3, 4, 5, 6],  # columns in normalization_stats inputs
     },
 }
 DEFAULT_MODEL = "full"
@@ -62,6 +63,8 @@ DEFAULT_MODEL = "full"
 # App lifespan: load models and normalization stats once at startup
 # ---------------------------------------------------------------------------
 
+_inputs_mean: np.ndarray | None = None
+_inputs_std: np.ndarray | None = None
 _targets_mean: np.ndarray | None = None
 _targets_std: np.ndarray | None = None
 _pilot_mass_kg: float = 1.0
@@ -71,7 +74,7 @@ _input_names: dict[str, str] = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _targets_mean, _targets_std, _pilot_mass_kg, _sessions, _input_names
+    global _inputs_mean, _inputs_std, _targets_mean, _targets_std, _pilot_mass_kg, _sessions, _input_names
 
     # Load pilot config
     pilot_name = os.environ.get("PILOT", "default")
@@ -88,6 +91,8 @@ async def lifespan(app: FastAPI):
     if not stats_path.exists():
         raise RuntimeError(f"Normalization stats not found: {stats_path.resolve()}")
     stats = json.loads(stats_path.read_text())
+    _inputs_mean = np.array(stats["inputs"]["mean"], dtype=np.float32)
+    _inputs_std = np.array(stats["inputs"]["std"], dtype=np.float32)
     _targets_mean = np.array(stats["targets"]["mean"], dtype=np.float32)
     _targets_std = np.array(stats["targets"]["std"], dtype=np.float32)
     print(f"Loaded normalization stats from {stats_path.resolve()}")
@@ -144,6 +149,17 @@ def _run_inference(model_name: str, window: np.ndarray) -> dict:
     cfg = MODEL_REGISTRY[model_name]
     session = _sessions[model_name]
     input_name = _input_names[model_name]
+
+    # Normalize inputs: client sends raw sensor values, model expects z-scores
+    # If the model uses a feature subset, slice the stats to match
+    feature_indices = cfg.get("feature_indices")
+    if feature_indices is not None:
+        inp_mean = _inputs_mean[feature_indices]  # type: ignore[index]
+        inp_std = _inputs_std[feature_indices]    # type: ignore[index]
+    else:
+        inp_mean = _inputs_mean
+        inp_std = _inputs_std
+    window = (window - inp_mean) / inp_std
 
     t0 = time.perf_counter()
     outputs = session.run(None, {input_name: window})
