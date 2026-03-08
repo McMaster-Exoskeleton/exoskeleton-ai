@@ -21,7 +21,7 @@ from exoskeleton_ml.models import create_model
 DEFAULT_MODEL_PATH = "outputs/2026-01-08/18-29-05/best_model.pt"
 
 
-def load_model(model_path: Path) -> tuple[torch.nn.Module, int]:
+def load_model(model_path: Path):
     checkpoint = torch.load(model_path, map_location="cpu")
 
     config_path = model_path.parent / "config.yaml"
@@ -33,22 +33,24 @@ def load_model(model_path: Path) -> tuple[torch.nn.Module, int]:
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
 
-    window_size: int = config.model.effective_history
-    return model, window_size
+    return model, config
 
 
 def export(model_path: Path, output_path: Path) -> None:
     print(f"Loading model: {model_path}")
-    model, window_size = load_model(model_path)
+    model, config = load_model(model_path)
+    window_size: int = config.model.effective_history
 
     num_params = sum(p.numel() for p in model.parameters())
+    input_size: int = config.model.architecture.input_size
+    output_size: int = config.model.architecture.output_size
     print(f"  Parameters:     {num_params:,}")
     print(f"  Window size:    {window_size} timesteps")
-    print(f"  Input shape:    (1, {window_size}, 28)")
-    print(f"  Output shape:   (1, {window_size}, 4)")
+    print(f"  Input shape:    (1, {window_size}, {input_size})")
+    print(f"  Output shape:   (1, {window_size}, {output_size})")
 
     # Representative input for tracing
-    dummy_input = torch.randn(1, window_size, 28)
+    dummy_input = torch.randn(1, window_size, input_size)
 
     with torch.no_grad():
         pytorch_output = model(dummy_input)
