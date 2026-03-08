@@ -7,6 +7,7 @@ ExecStart=/home/dylan-exo/ml_stuff/exoskeleton-ai/.venv/bin/uvicorn scripts.serv
 WorkingDirectory=/home/dylan-exo/ml_stuff/exoskeleton-ai
 Restart=on-failure
 User=dylan-exo
+Environment=PILOT=default
 
 [Install]
 WantedBy=multi-user.target

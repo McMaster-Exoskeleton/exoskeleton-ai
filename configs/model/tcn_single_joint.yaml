@@ -1,0 +1,39 @@
+# TCN Single Joint Model Configuration
+# Scaled version of default tcn configuration
+
+name: tcn_single_joint
+type: tcn
+
+# Architecture parameters
+architecture:
+  input_size: 7  # 6 IMU features + 1 joint angle
+  output_size: 1  # 1 joint moment for testing
+
+  # Single joint parameters
+  num_channels: [6, 6, 6, 6, 6]  # 5 layers with 6 channels each -> this is scaled from the default 25 since we are dealing with 1/4 of the information (reduce overfitting)
+  kernel_size: 7
+  dropout: 0.2
+  spatial_dropout: false
+  activation: ReLU
+  norm: weight_norm
+
+# Same Computed properties
+effective_history: 187  # timesteps
+receptive_field_ms: 1870  # milliseconds at 100Hz
+
+# Same Normalization
+normalization:
+  enabled: false
+  use_dataset_stats: true
+
+# Same weight initialization
+initialization:
+  conv_std: 0.01
+  linear_std: 0.01
+
+data_mapping:
+  joint_index: 0 # UPDATE to reflect joint being tested. Hip L = 0, Hip R = 1, Knee L = 2, Knee R = 3
+  joint_features: [0, 1, 2, 3, 4, 5, 6] # UPDATE to reflect columns containing features of the joint being tested
+
+
+estimated_params: 47000  
