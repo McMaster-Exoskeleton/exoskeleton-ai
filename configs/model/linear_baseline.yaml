@@ -1,0 +1,12 @@
+# Linear regression baseline configuration
+# Predicts each timestep independently (no time context).
+
+name: linear_baseline
+type: linear_baseline
+
+architecture:
+  input_size: 28
+  output_size: 4
+
+# Effective history = 1 timestep (no recurrence)
+effective_history: 1

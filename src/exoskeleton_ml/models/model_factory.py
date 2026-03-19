@@ -4,6 +4,7 @@ import torch.nn as nn
 from omegaconf import DictConfig
 
 from .baseline import BaselineModel
+from .linear_baseline import LinearBaseline
 from .tcn import TCN
 
 
@@ -46,6 +47,12 @@ def create_model(config: DictConfig) -> nn.Module:
             spatial_dropout=config.architecture.spatial_dropout,
             activation=config.architecture.activation,
             norm=config.architecture.norm,
+        )
+
+    elif model_type == "linear_baseline":
+        return LinearBaseline(
+            input_size=config.architecture.input_size,
+            output_size=config.architecture.output_size,
         )
 
     else:
