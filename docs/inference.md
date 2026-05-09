@@ -1,7 +1,7 @@
 # Inference System — Integration Guide
 
 > **Audience**: Embedded / firmware team
-> **Last Updated**: 2026-03-06
+> **Last Updated**: 2026-05-09
 > **Related**: [ML–Control Interface Specification](./ml_control_interface.md)
 
 This document covers everything needed to get torque predictions from the TCN model at runtime. It does not repeat the tensor spec or feature ordering — those are fully defined in [`ml_control_interface.md`](./ml_control_interface.md). Read that first.
@@ -15,6 +15,7 @@ This document covers everything needed to get torque predictions from the TCN mo
 3. [Deployment Modes](#deployment-modes)
 4. [Mode A: HTTP Server](#mode-a-http-server)
    - [Starting the Server](#starting-the-server)
+   - [Running as a systemd Service](#running-as-a-systemd-service)
    - [Endpoint Reference](#endpoint-reference)
    - [POST /predict (JSON)](#post-predict-json)
    - [POST /predict_msgpack (Binary)](#post-predict_msgpack-binary)
@@ -119,6 +120,44 @@ The server prints confirmation when the model is loaded:
 Loading ONNX model: /home/pi/exoskeleton-ai/outputs/model.onnx
 Model loaded. Input: 'input' | Expected shape: (1, 187, 28)
 ```
+
+---
+
+#### Running as a systemd Service
+
+For unattended deployments (auto-start at boot, auto-restart on crash), use the systemd unit at [`deploy/exoskeleton-server.service`](../deploy/exoskeleton-server.service). It runs `uvicorn scripts.server:app --host 0.0.0.0 --port 8000` from the repo's virtualenv and restarts on failure.
+
+**Install on the Pi**
+
+```bash
+# 1. Confirm the paths in the unit file match your Pi.
+#    Defaults assume:
+#      WorkingDirectory=/home/dylan-exo/ml_stuff/exoskeleton-ai
+#      ExecStart=/home/dylan-exo/ml_stuff/exoskeleton-ai/.venv/bin/uvicorn ...
+#      User=dylan-exo
+#    Edit deploy/exoskeleton-server.service if your layout differs.
+
+# 2. Install the unit:
+sudo cp deploy/exoskeleton-server.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
+# 3. Enable at boot and start now:
+sudo systemctl enable --now exoskeleton-server
+
+# 4. Verify:
+sudo systemctl status exoskeleton-server
+curl http://127.0.0.1:8000/health
+```
+
+**Common operations**
+
+```bash
+sudo systemctl restart exoskeleton-server   # after updating model.onnx or server.py
+sudo systemctl stop exoskeleton-server      # stop the server
+sudo journalctl -u exoskeleton-server -f    # tail logs
+```
+
+> The unit binds to `0.0.0.0:8000` (network-accessible). For localhost-only deployments, edit `ExecStart` to use `--host 127.0.0.1`.
 
 ---
 
